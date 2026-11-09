@@ -8,68 +8,112 @@ import Conversation from './pages/Conversation';
 import Login from './pages/Login';
 import Invite from './pages/Invite';
 
+// Import Supabase service
+import { supabase, authService } from './services/supabaseService';
+
 function App() {
   const [user, setUser] = useState(null);
   const [currentView, setCurrentView] = useState('login');
-  const [supabase, setSupabase] = useState(null);
-
-  // Initialize Supabase
-  useEffect(() => {
-    // This would be replaced with actual Supabase initialization
-    // For now, we'll simulate the setup
-    console.log('Initializing Supabase client...');
-    
-    // Mock Supabase instance for demonstration
-    const mockSupabase = {
-      auth: {
-        onAuthStateChange: () => {},
-        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-        signInWithPassword: (credentials) => Promise.resolve({ data: { user: null }, error: null }),
-        signOut: () => Promise.resolve({ error: null })
-      }
-    };
-    
-    setSupabase(mockSupabase);
-  }, []);
+  const [loading, setLoading] = useState(true);
 
   // Handle authentication state changes
   useEffect(() => {
-    if (supabase) {
-      const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-        if (session?.user) {
-          setUser(session.user);
-          setCurrentView('dashboard');
-        } else {
-          setUser(null);
-          setCurrentView('login');
-        }
-      });
+    const { data: authListener } = authService.onAuthStateChange((event, session) => {
+      setLoading(false);
+      
+      if (session?.user) {
+        setUser(session.user);
+        setCurrentView('dashboard');
+      } else {
+        setUser(null);
+        setCurrentView('login');
+      }
+    });
 
-      return () => {
-        authListener.subscription.unsubscribe();
-      };
+    // Check current session
+    const checkSession = async () => {
+      try {
+        const { data, error } = await authService.getCurrentUser();
+        if (!error && data?.user) {
+          setUser(data.user);
+          setCurrentView('dashboard');
+        }
+      } catch (err) {
+        console.error('Error checking session:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkSession();
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Handle login
+  const handleLogin = async (email, password) => {
+    try {
+      setLoading(true);
+      const { data, error } = await authService.signIn(email, password);
+      
+      if (error) throw error;
+      
+      // Login successful - user will be redirected by auth state change listener
+      return { success: true };
+    } catch (error) {
+      console.error('Login error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setLoading(false);
     }
-  }, [supabase]);
+  };
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      setLoading(true);
+      const { error } = await authService.signOut();
+      
+      if (error) throw error;
+      
+      setUser(null);
+      setCurrentView('login');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Render different views based on user state
   const renderView = () => {
+    if (loading) {
+      return (
+        <div className="loading-container">
+          <p>Loading...</p>
+        </div>
+      );
+    }
+
     switch (currentView) {
       case 'login':
-        return <Login onLogin={() => setCurrentView('dashboard')} />;
+        return <Login onLogin={handleLogin} />;
       case 'invite':
         return <Invite />;
       case 'dashboard':
-        return <Dashboard user={user} onLogout={() => setCurrentView('login')} />;
+        return <Dashboard user={user} onLogout={handleLogout} />;
       case 'conversation':
         return <Conversation />;
       default:
-        return <Login onLogin={() => setCurrentView('dashboard')} />;
+        return <Login onLogin={handleLogin} />;
     }
   };
 
   return (
     <div className="App">
-      <Header user={user} onLogout={() => setCurrentView('login')} />
+      <Header user={user} onLogout={handleLogout} />
       <main>
         {renderView()}
       </main>

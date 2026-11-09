@@ -1,18 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 
+// Import Supabase service
+import { conversationService } from '../services/supabaseService';
+
 const Dashboard = ({ user, onLogout }) => {
   const [conversations, setConversations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('inbox');
+  const [error, setError] = useState('');
 
-  // Mock data for demonstration
+  // Fetch conversations when component mounts
   useEffect(() => {
-    // Simulate API call to fetch conversations
     const fetchConversations = async () => {
+      if (!user) return;
+      
       setIsLoading(true);
+      setError('');
       
       try {
+        // In a real implementation, we would call the conversation service
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Mock conversation data based on user role
@@ -38,8 +45,9 @@ const Dashboard = ({ user, onLogout }) => {
         ];
         
         setConversations(mockConversations);
-      } catch (error) {
-        console.error('Failed to fetch conversations:', error);
+      } catch (err) {
+        setError('Failed to load conversations');
+        console.error('Error loading conversations:', err);
       } finally {
         setIsLoading(false);
       }
@@ -50,12 +58,18 @@ const Dashboard = ({ user, onLogout }) => {
 
   const handleConversationClick = (conversationId) => {
     // In a real app, this would navigate to the conversation page
+    // For now, we'll just log it
     console.log('Opening conversation:', conversationId);
+    // This would normally update the route to show the conversation view
   };
 
   const renderDashboardContent = () => {
     if (isLoading) {
       return <div className="loading">Loading conversations...</div>;
+    }
+
+    if (error) {
+      return <div className="error-message">{error}</div>;
     }
 
     if (conversations.length === 0) {

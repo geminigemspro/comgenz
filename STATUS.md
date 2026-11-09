@@ -35,15 +35,15 @@ This document tracks the progress of building the Private Support Web App based 
 - [x] Initial UI components for dashboard views
 
 ### Phase 2: User Management (In Progress)
-- [ ] Implement admin/user creation and management
-- [ ] Build user roster and assignment views
+- [x] Implement admin/user creation and management
+- [x] Build user roster and assignment views
 - [ ] Add account suspension/reassignment functionality
 - [ ] Implement audit logging for all operations
 
-### Phase 3: Messaging System (Not Started)
-- [ ] Create conversation interface for users and admins
-- [ ] Implement real-time messaging with Supabase Realtime
-- [ ] Add message sending, history loading, and offline support
+### Phase 3: Messaging System (In Progress)
+- [x] Create conversation interface for users and admins
+- [x] Implement real-time messaging with Supabase Realtime
+- [x] Add message sending, history loading, and offline support
 - [ ] Implement message encryption and decryption
 
 ### Phase 4: Security & Privacy (Not Started)

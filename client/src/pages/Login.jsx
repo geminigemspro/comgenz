@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import './Login.css';
 
+// Import Supabase service
+import { authService } from '../services/supabaseService';
+
 const Login = ({ onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,21 +16,17 @@ const Login = ({ onLogin }) => {
     setError('');
 
     try {
-      // In a real implementation, this would call Supabase auth
+      const { data, error: authError } = await authService.signIn(email, password);
+      
+      if (authError) {
+        throw new Error(authError.message);
+      }
+      
+      // Login successful - user will be redirected by auth state change listener
       // For now, we'll simulate a successful login
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock user object
-      const mockUser = {
-        id: 'user-123',
-        email: email,
-        role: 'user' // This would be determined by the backend
-      };
-      
-      // Simulate successful login
       onLogin();
     } catch (err) {
-      setError('Failed to login. Please check your credentials.');
+      setError(`Failed to login: ${err.message}`);
     } finally {
       setIsLoading(false);
     }
